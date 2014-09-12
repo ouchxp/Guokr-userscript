@@ -2,7 +2,7 @@
 // @name           Guokr
 // @author         nasdaq
 // @description    果壳网增强脚本 nasdaq's homepage: http://www.guokr.com/i/0927807376/
-// @version        1.4.1.1
+// @version        1.4.1.2
 // @namespace      http://www.guokr.com/
 // @download       http://userscripts.org/scripts/show/129841
 // @include        http://www.guokr.com/*
@@ -16,7 +16,7 @@
 
     // ※※※注意！脚本必须以UTF-8编码保存！※※※
     //开启/关闭日志输出
-    var debugMode = false;
+    var debugMode = true;
     // 持久化屏蔽ID列表, e.g. :   var ids = ["0792011715","0020566516","0814609355","0637014415"];  
     var ids = [];
     // 持久化屏蔽关键词列表, e.g. : var strs = ["中医","经络","针灸"];
@@ -64,13 +64,9 @@
     var selfHomepage;
     var willRun = false;
     var colors = ["ffffff","ffccc9","ffce93","fffc9e","ffffc7","9aff99","96fffb","cdffff","cbcefb","cfcfcf","fd6864","fe996b","fffe65","fcff2f","67fd9a","38fff8","68fdff","9698ed","c0c0c0","fe0000","f8a102","ffcc67","f8ff00","34ff34","68cbd0","34cdf9","6665cd","9b9b9b","cb0000","f56b00","ffcb2f","ffc702","32cb00","00d2cb","3166ff","6434fc","656565","9a0000","ce6301","cd9934","999903","009901","329a9d","3531ff","6200c9","343434","680100","963400","986536","646809","036400","34696d","00009b","303498","000000","330001","643403","663234","343300","013300","003532","010066","340096"];
-    
     // 设置MOOC学院的显示偏移        
-    var moocOffsetTop = 0;
-    var moocOffsetLeft = 0;
     if(pageurl.indexOf("mooc.guokr.com") !=-1 ){
-        moocOffsetTop = -85;
-        moocOffsetLeft = -333;
+    	//TODO:
     }
     
     //jQuery1.3.2
@@ -245,7 +241,7 @@
                 outTimer = setTimeout(function(){
                     box.fadeOut("fast");
                 },800);
-            }).appendTo($(document.body).children(".container"));
+            }).appendTo(getContainerObj());
         }
 
         
@@ -281,13 +277,13 @@
                 <ul id="gkr-faces-ul"/>\
             </div>\
         </div>'
-        ).appendTo($(document.body).children(".container"));
+        ).appendTo(getContainerObj());
         
         //表情预览悬浮框
         $('<div id="gkr-preview-box" style="display:none;position:absolute;height:64px;width:64px;z-index:9999;">\
             <div id="gkr-preview-div" style="background-color:white;background-size:64px 64px;background-position:0px 0px; border-color:#2AA4CE; border-style:solid; border-width:1px;padding:0px;height:64px;width:64px;"/>\
         </div>'
-        ).appendTo($(document.body).children(".container"));
+        ).appendTo(getContainerObj());
         
         /**果壳已经禁用彩色文字功能
         //颜色选择器悬浮框
@@ -296,7 +292,7 @@
             <div id="gkr-color-div" style="background-color:white; border-color:#2AA4CE; border-style:solid; border-width:1px;height:143px;"/>\
             <div style="background-color:transparent;height:7px"/>\
         </div>'
-        ).appendTo($(document.body).children(".container"));
+        ).appendTo($(document.body).children(containerSelector));
         */
         //小组菜单悬浮框
         $('<div id="gkr-groups-menu" style="font-size:12px;display:none;position:absolute;width:330px;z-index:9999;">\
@@ -314,7 +310,7 @@
             showGroupTimer = setTimeout(function(){
                 $("#gkr-groups-menu").show().hide();
             },400);
-        }).appendTo($(document.body).children(".container"));
+        }).appendTo(getContainerObj());
         
         //追加小组菜单
         $("ul.gh-nav a[href='http://www.guokr.com/group/user/recent_replies/']").hover(function(){
@@ -357,52 +353,6 @@
             });
         });
         
-        //表情分组与切换
-        $.each(defaultMoreFaces,function(i,n){
-            $("#gkr-faces-groups-ul").append($("<li style='margin:0;line-height:22px;height:22px;padding:0px 2px 0px 2px;float: left;'></li>").append($("<a style='font-size: 12px;color: #0078b6' index='" + i + "' href='javascript:void(0);'>"+ n.name +"</a>").click(function(){
-                var index = parseInt($(this).attr("index"),10);
-                
-                
-                moreFaces = defaultMoreFaces[index].faces;
-                $("#gkr-faces-ul").empty();
-                if($("#gkr-faces-ul:empty").length > 0){
-                    $.each(moreFaces,function(i,n){
-                        $("#gkr-faces-ul").append($("<li style='margin:0;line-height:22px;height:22px;width:22px;padding:0px;float: left;'>").append(
-                            $("<a href='javascript:void(0);' style='display:block;float: left;height: 22px; width: 22px;background-size:22px 22px;background-position:1px 0px;' />")
-                            .css("background-image","url('" + $.trim(n) + "')")
-                            .click(function(){addFace($.trim(n));})
-                            .hover(function(){showPreview(n,this);},function(){hidePreview();})
-                        ));
-                    });
-                }
-                try{moreFaceButton.focus();}catch(e){}//Chrome需要调用focus()获取焦点,FF调用反而会抛出异常
-                clearTimeout(hideFaceTimer);//Chrome重复点击更多表情时取消上次的blur事件
-                var rowLength = 14;
-                var facerows = (moreFaces.length/rowLength > (parseInt(moreFaces.length/rowLength,10))) ? (parseInt(moreFaces.length/rowLength,10) + 1) : (parseInt(moreFaces.length/rowLength,10));
-                $("#gkr-faces-div").css("width",(rowLength * 22) + 2);
-                
-                //默认情况
-                var top = moreFaceButton.offset().top + moocOffsetTop - facerows*22 - 36 - 22;
-                var triangleTop = facerows*22 + 44;
-                var trangleShape = {"border-color":"#2AA4CE transparent transparent transparent", "border-style":"solid dashed dashed dashed"}//down
-                if($(editorSelector).offset().left < 10){//编辑器全屏
-                    top = moreFaceButton.offset().top + moocOffsetTop + 40;
-                    triangleTop = -16;
-                    trangleShape = {"border-color":"transparent transparent #2AA4CE transparent", "border-style":"dashed dashed solid dashed"}//up
-                }
-                
-                $("#gkr-faces-box").show().css("width",(rowLength * 22) + 2)
-                .css("top",top)
-                .css("left",moreFaceButton.offset().left + moocOffsetLeft - 210 + 70)
-                .children("#gkr-faces-triangle")
-                .css("left",210-70+5)
-                .css("top",triangleTop)
-                .css(trangleShape);
-                log(facerows*22 +20);
-                $("#gkr-faces-ul").css("height",facerows*22 +20);
-            })));
-        });
-        
         //还有收藏小组没做TODO
         
         //获取selfHomepage
@@ -421,11 +371,18 @@
                 }
                 $("<li style='float:left;width:95px;height:22px;' pinyin='" + Pinyin.get(n.replace(/\s|\d|!/g,"")) + "'><a href='" + i + "' title='"+ n +"'>" + groupName + "</a></li>").appendTo("#gkr-groups-ul");
             });
+            
+            // 覆盖样式
+            $("#gkr-groups-ul a").css({
+            	"color":"#0078b6",
+            	"text-decoration":"none",
+            	"line-height":"1.5"
+            });
         });
         
         //主处理
         domChanged();
-        document.addEventListener("DOMNodeInserted",domChangeRunOnce,false);
+        document.addEventListener("DOMNodeInserted",domChangeRunOnce,false); 
         
         //短时间800ms内多次事件发生只执行一次
         function domChangeRunOnce(){
@@ -442,24 +399,25 @@
             //主过滤处理
             var strsPlus = store("strs").split(",").concat(strs);
             var idsPlus = store("ids").split(",").concat(ids);
-            $(".container").find("li a,dd a,li * a,dd * a,dl * a").filter(":visible").each(function(){
+            getContainerObj().find("li a,dd a,li * a,dd * a,dl * a").filter(":visible").each(function(){
                 var a = $(this);
                 var text = a.text();
                 $.each(strsPlus,function(i,n){if(n && text.indexOf(n) != -1){a.closest("li,dd,dl").hide();return false;}});
                 var href = a.attr("href");
                 if(href && a.parent().attr("class") != "titles-b-r"){//最后回复者不作为过滤条件
-                    var id = href.replace("http://www.guokr.com/i/","").replace(/\//g,"");
+                    var id = getIdFromUrl(href);
                     if(id && $.inArray(id,idsPlus) != -1){a.closest("li,dd,dl").hide();}
                 }
             });
             
             //悬浮框
-            $("a[href^='http://www.guokr.com/i/']").children("img[hoverBoxAdded!='true']").attr("hoverBoxAdded","true").hover(function(){
+            var thumbnailSelector = "a[href^='http://www.guokr.com/i/'],a[href^='http://www.guokr.com/group/i/']";
+            $(thumbnailSelector).children("img[hoverBoxAdded!='true']").attr("hoverBoxAdded","true").hover(function(){
                 var img = $(this);
                 var parent = $(this).parent();
                 clearTimeout(outTimer);
                 hoverTimer = setTimeout(function(){
-                    var id = parent.attr("href").toString().replace("http://www.guokr.com/i/","").replace(/\//g,"");
+                    var id = getIdFromUrl(parent.attr("href").toString());
                     $("#gkr-hover-msg").attr("href","/user/messages/" + id + "/");
                     $("#gkr-hover-box").hide().data("userId",id);
                     $("#gkr-hover-link").attr("href",parent.attr("href")).html(parent.text()+parent.attr("title"));
@@ -467,7 +425,8 @@
                     $("#gkr-hover-img").empty().append(img.clone().css("height","48px").css("width","48px"));
                     var note = json2obj(store("gkr-user-notes"))[id];
                     $("#gkr-hover-notes").val(note ? note : "");//FF,Chrome不处理undefined
-                    $("#gkr-hover-box:hidden").css("top",img.offset().top-120).css("left",img.offset().left).fadeIn("fast").children("#gkr-hover-triangle").css("left",img.attr("width")/2-6);
+                    var imgAbsPos = getAbsPos(img[0]);
+                    $("#gkr-hover-box:hidden").css("top",imgAbsPos.top-120).css("left",imgAbsPos.left).fadeIn("fast").children("#gkr-hover-triangle").css("left",img.attr("width")/2-6);
                 },800);
             },function(){
                 clearTimeout(hoverTimer);
@@ -477,8 +436,9 @@
             });
             
             var toolBarSelector = "div.edui-toolbar[addFaceDone!='true'],div.mce-container-body.mce-flow-layout[addFaceDone!='true']";
+            var addedToolBar = "div.edui-toolbar[addFaceDone='true'],div.mce-container-body.mce-flow-layout[addFaceDone='true']";
             //功能按钮
-            if($(toolBarSelector).length > 0){
+            if($(toolBarSelector).length > 0 && $(addedToolBar).length == 0){
                 var toolBar = $($(toolBarSelector)[0]);
 
                 //是否为新版编辑器
@@ -529,7 +489,7 @@
 
                 //加入更多表情
                 if (isMce) {
-                    var moreFaceButton = $("<div tabIndex='999'  id='mce_99' class='mce-container mce-flow-layout-item mce-btn' ><div id='mce_99-body'></div></div>");
+                	var moreFaceButton = $("<div tabIndex='999'  id='mce_99' class='mce-container mce-flow-layout-item mce-btn' ><div id='mce_99-body'></div></div>");
                     moreFaceButton.children().css("width",25);
                     moreFaceButton.children().css("height",25);
                     moreFaceButton.children().css("background-position","3px 3px");
@@ -537,8 +497,9 @@
                     moreFaceButton.children().css("background-repeat","no-repeat");
                 }
                 else{
-                    var moreFaceButton = $("<div tabIndex='999' class='edui-box edui-button'><div class='edui-box edui-icon' style='background-position: 2px 2px;background-repeat: no-repeat;'></div></div>");
+                	var moreFaceButton = $("<div tabIndex='999' class='edui-box edui-button'><div class='edui-box edui-icon' style='background-position: 2px 2px;background-repeat: no-repeat;'></div></div>");
                 }
+                log(moreFaceButton);
 
                 var moreFace = "http://img.t.sinajs.cn/t35/style/images/common/face/ext/normal/eb/smile.gif";
                 //tabIndex属性帮助div获取焦点,处理foucs blur事件
@@ -565,18 +526,19 @@
                     var facerows = (moreFaces.length/rowLength > (parseInt(moreFaces.length/rowLength,10))) ? (parseInt(moreFaces.length/rowLength,10) + 1) : (parseInt(moreFaces.length/rowLength,10));
 
                     //默认情况
-                    var top = morefaceLink.offset().top +moocOffsetTop - facerows*22 - 36 - 22;
+                    var morefaceLinkAbsPos = getAbsPos(morefaceLink[0]);
+                    var top = morefaceLinkAbsPos.top - facerows*22 - 36 - 22;
                     var triangleTop = facerows*22 + 44;
                     var trangleShape = {"border-color":"#2AA4CE transparent transparent transparent", "border-style":"solid dashed dashed dashed"}//down
                     if($(editorSelector).offset().left < 10){//编辑器全屏
-                        top = morefaceLink.offset().top + moocOffsetTop + 40;
+                        top = morefaceLinkAbsPos.top + 40;
                         triangleTop = -16;
                         trangleShape = {"border-color":"transparent transparent #2AA4CE transparent", "border-style":"dashed dashed solid dashed"}//up
                     }
                     $("#gkr-faces-div").css("width",(rowLength * 22) + 2);
                     $("#gkr-faces-box").show().css("width",(rowLength * 22) + 2)
                     .css("top",top)
-                    .css("left",morefaceLink.offset().left + moocOffsetLeft - 210 + 70)
+                    .css("left",morefaceLinkAbsPos.left - 210 + 70)
                     .children("#gkr-faces-triangle").css("left",210-70+5)
                     .css("top",triangleTop)
                     .css(trangleShape);
@@ -606,11 +568,12 @@
                         
                         
                         //默认情况
-                        var top = morefaceLink.offset().top + moocOffsetTop - facerows*22 - 36;
+                        var morefaceLinkAbsPos = getAbsPos(morefaceLink[0]);
+                        var top = morefaceLinkAbsPos.top - facerows*22 - 36;
                         var triangleTop = facerows*22 + 22;
                         var trangleShape = {"border-color":"#2AA4CE transparent transparent transparent", "border-style":"solid dashed dashed dashed"}//down
                         if($(editorSelector).offset().left < 10){//编辑器全屏
-                            top = morefaceLink.offset().top + moocOffsetTop + 40;
+                            top = morefaceLinkAbsPos.top + 40;
                             triangleTop = -16;
                             trangleShape = {"border-color":"transparent transparent #2AA4CE transparent", "border-style":"dashed dashed solid dashed"}//up
                         }
@@ -618,7 +581,7 @@
                         $("#gkr-faces-div").css("width",(rowLength * 22) + 2);
                         $("#gkr-faces-box").show().css("width",(rowLength * 22) + 2)
                         .css("top",top)
-                        .css("left",morefaceLink.offset().left + moocOffsetLeft - 100 + 70)
+                        .css("left",morefaceLinkAbsPos.left - 100 + 70)
                         .children("#gkr-faces-triangle").css("left",100-70+5)
                         .css("top",triangleTop)
                         .css(trangleShape);
@@ -631,19 +594,67 @@
                 );
                 toolBar.append(moreFaceButton);
                 
-
+                //表情分组与切换
+                $.each(defaultMoreFaces,function(i,n){
+                    $("#gkr-faces-groups-ul").append($("<li style='margin:0;line-height:22px;height:22px;padding:0px 2px 0px 2px;float: left;'></li>").append($("<a style='font-size: 12px;color: #0078b6' index='" + i + "' href='javascript:void(0);'>"+ n.name +"</a>").click(function(){
+                        var index = parseInt($(this).attr("index"),10);
+                        
+                        
+                        moreFaces = defaultMoreFaces[index].faces;
+                        $("#gkr-faces-ul").empty();
+                        if($("#gkr-faces-ul:empty").length > 0){
+                            $.each(moreFaces,function(i,n){
+                                $("#gkr-faces-ul").append($("<li style='margin:0;line-height:22px;height:22px;width:22px;padding:0px;float: left;'>").append(
+                                    $("<a href='javascript:void(0);' style='display:block;float: left;height: 22px; width: 22px;background-size:22px 22px;background-position:1px 0px;' />")
+                                    .css("background-image","url('" + $.trim(n) + "')")
+                                    .click(function(){addFace($.trim(n));})
+                                    .hover(function(){showPreview(n,this);},function(){hidePreview();})
+                                ));
+                            });
+                        }
+                        try{moreFaceButton.focus();}catch(e){}//Chrome需要调用focus()获取焦点,FF调用反而会抛出异常
+                        clearTimeout(hideFaceTimer);//Chrome重复点击更多表情时取消上次的blur事件
+                        var rowLength = 14;
+                        var facerows = (moreFaces.length/rowLength > (parseInt(moreFaces.length/rowLength,10))) ? (parseInt(moreFaces.length/rowLength,10) + 1) : (parseInt(moreFaces.length/rowLength,10));
+                        $("#gkr-faces-div").css("width",(rowLength * 22) + 2);
+                        
+                        //默认情况
+                        var moreFaceButtonAbsPos = getAbsPos(moreFaceButton[0]);
+                        log(moreFaceButtonAbsPos);
+                        var top = moreFaceButtonAbsPos.top - facerows*22 - 36 - 22;
+                        var triangleTop = facerows*22 + 44;
+                        var trangleShape = {"border-color":"#2AA4CE transparent transparent transparent", "border-style":"solid dashed dashed dashed"}//down
+                        if($(editorSelector).offset().left < 10){//编辑器全屏
+                            top = moreFaceButtonAbsPos.top + 40;
+                            triangleTop = -16;
+                            trangleShape = {"border-color":"transparent transparent #2AA4CE transparent", "border-style":"dashed dashed solid dashed"}//up
+                        }
+                        
+                        $("#gkr-faces-box").show().css("width",(rowLength * 22) + 2)
+                        .css("top",top)
+                        .css("left",moreFaceButtonAbsPos.left - 210 + 70)
+                        .children("#gkr-faces-triangle")
+                        .css("left",210-70+5)
+                        .css("top",triangleTop)
+                        .css(trangleShape);
+                        log(facerows*22 +20);
+                        $("#gkr-faces-ul").css("height",facerows*22 +20);
+                    })));
+                });
                 
                 //显示隐藏表情预览
                 function showPreview(url,currentTarget){
                     showPreviewTimer = setTimeout(function(){
                         //计算靠左还是靠右显示预览图
-                        var previewDivLeft = $("#gkr-faces-box").offset().left;
-                        var currentTargetLeft = $(currentTarget).offset().left;
+                    	var boxAbsPos = getAbsPos($("#gkr-faces-box")[0]);
+                        var previewDivLeft = boxAbsPos.left;
+                        var currentTargetLeft = getAbsPos(currentTarget).left;
                         var boxWidth = $("#gkr-faces-box").width();
+                        var previewWidth = $("#gkr-preview-box").width();
                         if(currentTargetLeft - previewDivLeft <  (boxWidth/2)){
-                            previewDivLeft = previewDivLeft + boxWidth - 64;
+                        	previewDivLeft = previewDivLeft + boxWidth - previewWidth;
                         }
-                        $("#gkr-preview-box").show().css("top",$("#gkr-faces-box").offset().top + moocOffsetTop + 23).css("left",previewDivLeft + moocOffsetLeft).children("#gkr-preview-div").css("background-image","url('" + $.trim(url) + "')");
+                        $("#gkr-preview-box").show().css("top",boxAbsPos.top + 23).css("left",previewDivLeft).children("#gkr-preview-div").css("background-image","url('" + $.trim(url) + "')");
                     },400);
                 }
                 function hidePreview(){
@@ -743,6 +754,28 @@
         }
 
         //--------Util--------
+        function getContainerObj(){
+//            var containerSelector = ".gwrap, .wrap"; // 主页面container元素的选择器.gwrap 是主站, .wrap是mooc学院
+//            var container = $(document.body).children(containerSelector);
+//            if(container.length == 0){
+//            	container = $(document.body).children(".container"); 
+//            }
+        	//对话框不加到body里各个画面布局有问题. 暂时先加到body里了.
+        	return $(document.body);
+        }
+        
+        function getIdFromUrl(url) {
+        	return url.replace("http://www.guokr.com/i/","").replace("http://www.guokr.com/group/i/","").replace(/\//g,"");
+        }
+
+        //绝对定位 via: http://www.cnblogs.com/jianfangkk/archive/2011/12/30/2307172.html
+        function getAbsPos(elem) {
+        	var left = elem.getBoundingClientRect().left+(document.body.scrollLeft||document.documentElement.scrollLeft);
+        	var top = elem.getBoundingClientRect().top+(document.body.scrollTop||document.documentElement.scrollTop);
+        	var pos = {}; pos.top = top; pos.left = left;
+        	return pos;
+        }
+        
         //本地存储
         function store(key, value) {
             if(!window.localStorage){alert("Error : 无法检测到localStorage!");return;}
