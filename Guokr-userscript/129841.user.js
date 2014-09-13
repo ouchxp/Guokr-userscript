@@ -2,7 +2,7 @@
 // @name           Guokr
 // @author         nasdaq
 // @description    果壳网增强脚本 nasdaq's homepage: http://www.guokr.com/i/0927807376/
-// @version        1.4.1.2
+// @version        1.4.1.3
 // @namespace      http://www.guokr.com/
 // @download       http://userscripts.org/scripts/show/129841
 // @include        http://www.guokr.com/*
