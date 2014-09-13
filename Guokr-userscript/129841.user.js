@@ -761,7 +761,11 @@
 //            	container = $(document.body).children(".container"); 
 //            }
         	//对话框不加到body里各个画面布局有问题. 暂时先加到body里了.
-        	return $(document.body);
+        	var container = $(document.body);
+        	if(container.attr("contenteditable") == "true") { //避免把编辑框也改了
+        		container = $("#oUmwPjslwx123"); // 生成空集
+        	}
+        	return container;
         }
         
         function getIdFromUrl(url) {
